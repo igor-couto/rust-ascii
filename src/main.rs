@@ -14,8 +14,12 @@ fn main() {
     for current_line in 0u8..LINES -1 {
         
         while current_column < COLUMNS {
-            let a = format!("\t{} {}", DECIMALS[((current_column * LINES) + current_line) as usize], CHARS[((current_column * LINES) + current_line) as usize]);
-            line_buffer.push_str(&a);
+            
+            let index = ((current_column * LINES) + current_line) as usize;
+            
+            let ascii_to_print = format!("\t{} {}", DECIMALS[index], CHARS[index]);
+            line_buffer.push_str(&ascii_to_print);
+
             current_column = current_column + 1;
         }
 
