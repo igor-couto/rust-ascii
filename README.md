@@ -2,7 +2,7 @@
 
 [![Build Badge](https://github.com/igor-couto/myrepo/actions/workflows/build.yml/badge.svg)](https://github.com/igor-couto/myrepo/actions/workflows/build.yml)
 
-CLI to prints the ascii table, made with Rust lenguage
+CLI to prints the ascii table, made with Rust language
 
 ## Build
 
