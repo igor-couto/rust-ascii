@@ -1,0 +1,118 @@
+name: Publish
+
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENCE'
+      - '.gitignore'
+      - '.github/workflows/build.yml'
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ReleaseWindows:
+    runs-on: windows-latest
+
+    env:
+      branch: ${{ github.head_ref || github.ref_name }}
+
+    outputs:
+      semVer: ${{ steps.set_semver.outputs.semVer }}
+
+    steps:
+
+    - name: Checkout the code
+      uses: actions/checkout@v3
+    
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1.0.6
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Git Fetch Unshallow
+      run: git fetch --prune --tags --unshallow
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.10.2
+      with:
+        versionSpec: '5.x'
+
+    - name: Determine Version
+      id:   gitversion
+      uses: gittools/actions/gitversion/execute@v0.10.2
+    
+    - name: Output semver
+      id: set_semver
+      shell: bash
+      run: |
+        if [[ "${{ env.branch }}" == 'main' ]];
+        then
+          echo "::set-output name=semVer::$GitVersion_MajorMinorPatch"
+        else
+          echo "::set-output name=semVer::$GitVersion_SemVer"
+        fi
+
+    - name: Release
+      run: |
+        rustup target add x86_64-pc-windows-msvc
+        cargo build --release --target=x86_64-pc-windows-msvc
+
+    - name: Zip Content
+      run: |
+        Compress-Archive -Path target/x86_64-pc-windows-msvc/release/ascii.exe -DestinationPath ascii-v${{ steps.set_semver.outputs.semVer }}-windows-x86_64.zip
+    
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ascii-v${{ steps.set_semver.outputs.semVer }}-windows-x86_64
+        path: ascii-v${{ steps.set_semver.outputs.semVer }}-windows-x86_64.zip
+        if-no-files-found: error
+  
+  Publish:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    needs: ReleaseWindows
+    env:
+      branch: ${{ github.head_ref || github.ref_name }}
+      version: ${{ needs.ReleaseWindows.outputs.semVer }}
+      tag: v${{ needs.ReleaseWindows.outputs.semVer }}
+      windows_package_name: 'ascii-v${{ needs.ReleaseWindows.outputs.semVer }}-windows-x86_64'
+      packageFileName: 'ascii-windows-${{ needs.ReleaseWindows.outputs.semVer }}.exe'
+      packageId: 'ascii'
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v3
+
+    - name: Git Fetch Unshallow
+      run: git fetch --prune --tags --unshallow
+    
+    - name: Download Windows Artifact
+      uses: actions/download-artifact@v3.0.2
+      with:
+        name: ${{ env.windows_package_name }}
+        path: ${{ runner.temp }}
+
+    - name: Create Release
+      id: create_release
+      uses: ncipollo/release-action@v1.12.0
+      with:
+        allowUpdates: true 
+        draft: false
+        tag: ${{ env.tag }}
+        name: ascii-v${{ env.version }}
+        token: ${{ github.token }}
+
+    - name: Upload release windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ runner.temp }}/${{ env.windows_package_name }}.zip
+        asset_name: ${{ env.windows_package_name }}.zip
+        asset_content_type: application/zip

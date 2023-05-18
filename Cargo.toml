@@ -3,3 +3,6 @@ name = "ascii"
 version = "0.1.0"
 authors = ["Igor Couto <igor.fcouto@gmail.com>"]
 edition = "2021"
+
+[dependencies]
+colored = "2.0"
