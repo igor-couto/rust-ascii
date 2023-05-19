@@ -72,16 +72,79 @@ jobs:
         name: ascii-v${{ steps.set_semver.outputs.semVer }}-windows-x86_64
         path: ascii-v${{ steps.set_semver.outputs.semVer }}-windows-x86_64.zip
         if-no-files-found: error
+
+
+### Linux Release ###
+
+  ReleaseLinux:
+    runs-on: ubuntu-latest
+
+    env:
+      branch: ${{ github.head_ref || github.ref_name }}
+
+    outputs:
+      semVer: ${{ steps.set_semver.outputs.semVer }}
+
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v3
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1.0.6
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Git Fetch Unshallow
+      run: git fetch --prune --tags --unshallow
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.10.2
+      with:
+        versionSpec: '5.x'
+
+    - name: Determine Version
+      id:   gitversion
+      uses: gittools/actions/gitversion/execute@v0.10.2
+
+    - name: Output semver
+      id: set_semver
+      shell: bash
+      run: |
+        if [[ "${{ env.branch }}" == 'main' ]];
+        then
+          echo "::set-output name=semVer::$GitVersion_MajorMinorPatch"
+        else
+          echo "::set-output name=semVer::$GitVersion_SemVer"
+        fi
+
+    - name: Release
+      run: |
+        cargo build --release
+
+    - name: Tarball Content
+      run: |
+        tar czf ascii-v${{ steps.set_semver.outputs.semVer }}-linux-x86_64.tar.gz -C target/release ascii
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ascii-v${{ steps.set_semver.outputs.semVer }}-linux-x86_64
+        path: ascii-v${{ steps.set_semver.outputs.semVer }}-linux-x86_64.tar.gz
+        if-no-files-found: error
   
+### Publush ###
+
   Publish:
     permissions: write-all
     runs-on: ubuntu-latest
-    needs: ReleaseWindows
+    needs: [ReleaseWindows, ReleaseLinux]
     env:
       branch: ${{ github.head_ref || github.ref_name }}
       version: ${{ needs.ReleaseWindows.outputs.semVer }}
       tag: v${{ needs.ReleaseWindows.outputs.semVer }}
       windows_package_name: 'ascii-v${{ needs.ReleaseWindows.outputs.semVer }}-windows-x86_64'
+      linux_package_name: 'ascii-v${{ needs.ReleaseLinux.outputs.semVer }}-linux-x86_64'
       packageFileName: 'ascii-windows-${{ needs.ReleaseWindows.outputs.semVer }}.exe'
       packageId: 'ascii'
     steps:
@@ -90,11 +153,17 @@ jobs:
 
     - name: Git Fetch Unshallow
       run: git fetch --prune --tags --unshallow
-    
+
     - name: Download Windows Artifact
       uses: actions/download-artifact@v3.0.2
       with:
         name: ${{ env.windows_package_name }}
+        path: ${{ runner.temp }}
+
+    - name: Download Linux Artifact
+      uses: actions/download-artifact@v3.0.2
+      with:
+        name: ${{ env.linux_package_name }}
         path: ${{ runner.temp }}
 
     - name: Create Release
@@ -116,3 +185,13 @@ jobs:
         asset_path: ${{ runner.temp }}/${{ env.windows_package_name }}.zip
         asset_name: ${{ env.windows_package_name }}.zip
         asset_content_type: application/zip
+
+    - name: Upload release linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ runner.temp }}/${{ env.linux_package_name }}.tar.gz
+        asset_name: ${{ env.linux_package_name }}.tar.gz
+        asset_content_type: application/gzip
