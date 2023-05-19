@@ -8,7 +8,11 @@ const LINES: usize = 16;
 const COLUMNS: usize = (ASCII_COUNT / LINES) + if ASCII_COUNT % LINES > 0 { 1 } else { 0 };
 
 fn main() {
-    windows::enable_ansi_support().ok();
+
+    #[cfg(target_os = "windows")]{
+        windows::enable_ansi_support().ok();
+    }
+    
     println!();
 
     for current_line in 0..LINES {
