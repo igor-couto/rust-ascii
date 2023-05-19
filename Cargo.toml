@@ -1,8 +1,10 @@
 [package]
 name = "ascii"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Igor Couto <igor.fcouto@gmail.com>"]
 edition = "2021"
+description = "A program that prints ASCII table"
+repository = "https://github.com/igor-couto/rust-ascii"
 
 [dependencies]
 colored = "2.0"
