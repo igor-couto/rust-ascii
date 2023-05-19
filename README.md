@@ -1,6 +1,7 @@
 # ascii
 
-[![Build Badge](https://github.com/igor-couto/myrepo/actions/workflows/build.yml/badge.svg)](https://github.com/igor-couto/myrepo/actions/workflows/build.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/igor-couto/rust-ascii?logo=github&sort=semver)](https://github.com/igor-couto/rust-ascii/releases/latest)
+[![Build Badge](https://github.com/igor-couto/rust-ascii/actions/workflows/build.yml/badge.svg)](https://github.com/igor-couto/rust-ascii/actions/workflows/build.yml)
 
 CLI to prints the ascii table, made with Rust language
 
