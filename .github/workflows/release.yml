@@ -3,6 +3,7 @@ name: Publish
 on:
   push:
     paths-ignore:
+      - 'CHANGELOG.md'
       - 'README.md'
       - 'LICENCE'
       - '.gitignore'
@@ -189,3 +190,27 @@ jobs:
         asset_path: ${{ runner.temp }}/${{ env.linux_package_name }}.tar.gz
         asset_name: ${{ env.linux_package_name }}.tar.gz
         asset_content_type: application/gzip
+
+  UpdateChangelog:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install standard-version
+        run: npm install -g standard-version
+
+      - name: Generate changelog and version
+        run: standard-version --release-as patch --infile CHANGELOG.md
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
