@@ -3,6 +3,7 @@ name: Publish
 on:
   push:
     paths-ignore:
+      - 'Cargo.toml'
       - 'CHANGELOG.md'
       - 'README.md'
       - 'LICENCE'
