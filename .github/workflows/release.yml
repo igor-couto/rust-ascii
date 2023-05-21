@@ -192,6 +192,7 @@ jobs:
         asset_content_type: application/gzip
 
   UpdateChangelog:
+    needs: [Publish]
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
@@ -216,8 +217,8 @@ jobs:
 
       - name: Update Cargo.toml version
         run: |
-          VERSION=$(head -1 CHANGELOG.md | cut -d' ' -f2)
-          sed -i 's/^version = "[0-9]\+\.[0-9]\+\.[0-9]\+"/version = "'$VERSION'"/' Cargo.toml
+          VERSION=$(grep -m 1 '^### ' CHANGELOG.md | awk '{print $2}')
+          sed -i '/\[package\]/,/^\[.*\]/ s/^version = "[0-9]\+\.[0-9]\+\.[0-9]\+"/version = "'$VERSION'"/' Cargo.toml
 
       - name: Commit updated Cargo.toml
         run: |

@@ -1,6 +1,6 @@
 [package]
 name = "ascii"
-version = "1.0.0"
+version = "0.0.0"
 authors = ["Igor Couto <igor.fcouto@gmail.com>"]
 edition = "2021"
 description = "A program that prints ASCII table"
