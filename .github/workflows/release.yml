@@ -214,6 +214,16 @@ jobs:
       - name: Generate changelog and version
         run: standard-version --release-as patch --infile CHANGELOG.md
 
+      - name: Update Cargo.toml version
+        run: |
+          VERSION=$(head -1 CHANGELOG.md | cut -d' ' -f2)
+          sed -i 's/^version = "[0-9]\+\.[0-9]\+\.[0-9]\+"/version = "'$VERSION'"/' Cargo.toml
+
+      - name: Commit updated Cargo.toml
+        run: |
+          git add Cargo.toml
+          git commit -m "chore: bump version in Cargo.toml to $VERSION"
+
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
         with:
