@@ -216,7 +216,7 @@ jobs:
       - name: Generate changelog and version
         run: standard-version --release-as patch --infile CHANGELOG.md
 
-      - name: Update Cargo.toml version
+      - name: Update Cargo.toml Version
         run: |
           VERSION=$(grep -m 1 '^### ' CHANGELOG.md | awk '{print $2}')
           sed -i '/\[package\]/,/^\[.*\]/ s/^version = "[0-9]\+\.[0-9]\+\.[0-9]\+"/version = "'$VERSION'"/' Cargo.toml
