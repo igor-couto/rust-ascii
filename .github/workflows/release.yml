@@ -206,6 +206,11 @@ jobs:
       - name: Install standard-version
         run: npm install -g standard-version
 
+      - name: Setup Git
+        run: |
+          git config user.name "igor-couto"
+          git config user.email "igor.fcouto@gmail.com"
+
       - name: Generate changelog and version
         run: standard-version --release-as patch --infile CHANGELOG.md
 
